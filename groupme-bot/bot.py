@@ -28,6 +28,7 @@ def get_group_messages(since_id=None):
 
     get_url = f"https://api.groupme.com/v3/groups/{GROUP_ID}/messages"
     response = requests.get(get_url, params=params)
+    #print(response.json().get("response", {}))
     if response.status_code == 200:
         # this shows how to use the .get() method to get specifically the messages but there is more you can do (hint: sample.json)
         return response.json().get("response", {}).get("messages", [])
@@ -40,9 +41,14 @@ def process_message(message):
     text = message["text"].lower()
 
     # i.e. responding to a specific message (note that this checks if "hello bot" is anywhere in the message, not just the beginning)
-    if "hello bot" in text:
-        send_message("sup")
-
+    if "hello slimebot" in text and message["name"] == "S Jones":
+        send_message("greetings")
+    if "good morning" in text and message["sender_type"] == "user":
+        new_message = "Good morning, {}".format(message["name"])
+        send_message(new_message)
+    if "good night" in text and message["sender_type"] == "user":
+        new_message = "Good night, {}".format(message["name"])
+        send_message(new_message)
     LAST_MESSAGE_ID = message["id"]
 
 
@@ -52,7 +58,8 @@ def main():
     while True:
         messages = get_group_messages(LAST_MESSAGE_ID)
         for message in reversed(messages):
-            process_message(message)
+            if time.time() - int(message["created_at"]) <= 30:
+                process_message(message)
         time.sleep(10)
 
 
